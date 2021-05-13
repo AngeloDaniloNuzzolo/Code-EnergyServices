@@ -23,7 +23,7 @@ external_stylesheets = ['https://raw.githubusercontent.com/STATWORX/blog/master/
 
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+server = app.server
 
 
 
@@ -107,7 +107,7 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 tab2_layout =  html.Div( children=[
                html.H3('Time series graph'),
              dcc.Graph(
-                id="yearly-data",
+                id="yearly-data1",
                 figure={
                     "data":[
                         {'x': df['Date'], 'y': df['Power[kW]'], 'type': 'line', 'name': 'Power'},
@@ -121,7 +121,7 @@ tab2_layout =  html.Div( children=[
     ),
             
               dcc.Graph(
-                id="yearly-data",
+                id="yearly-data2",
                 figure={
                     "data":[
                         {'x':df['Date'], 'y': df['Solar_Radiation[W/m^2]'], 'type': 'line', 'name': 'Solar radiation'},
