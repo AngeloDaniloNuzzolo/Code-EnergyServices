@@ -25,9 +25,7 @@ from sklearn.feature_selection import f_regression, mutual_info_regression     #
 from sklearn.ensemble import RandomForestRegressor                             # Random Forest Regressor is used
 from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
 from sklearn import  metrics                            #To see the performance
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor 
-from sklearn.ensemble import BaggingRegressor
 from sklearn.ensemble import BaggingRegressor
 from sklearn.cluster import KMeans
 
@@ -823,7 +821,7 @@ pag6_layout = html.Div([
 
 @app.callback(Output('reg', 'children'),
               Input('dropd-reg', 'value'))
-def render_reg (Regression):
+def render_regr (Regression):
                       
                       
     if Regression==1:
