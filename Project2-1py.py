@@ -26,7 +26,6 @@ from sklearn.ensemble import RandomForestRegressor                             #
 from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
 from sklearn import  metrics                            #To see the performance
 from sklearn.ensemble import RandomForestRegressor
-from xgboost import XGBRegressor
 from sklearn.neural_network import MLPRegressor 
 from sklearn.ensemble import BaggingRegressor
 from sklearn.ensemble import BaggingRegressor
@@ -713,23 +712,6 @@ print(MAE_RF,MSE_RF,RMSE_RF,cvRMSE_RF)
     # XGBoost is basically designed to enhance the performance and speed of a Machine Learning model, it is a Gradient boosting with second order derivative.
 
 
-parameters = {'n_estimators': 700,                                        # The number of boosting stages to perform. 
-              'max_depth': 6,                                             # Maximum depth of the individual regression estimators. The maximum depth limits the number of nodes in the tree.
-              'learning_rate': 0.01, }                                    # Learning rate shrinks the contribution of each tree. There is a trade-off between learning_rate and n_estimators.
-                                                                          # Loss function to be optimized: 'ls’ refers to least squares regression.
-
-XGB_model = XGBRegressor(**parameters)                                    # Create the XGB regressor object with speific parameters.
-XGB_model.fit(X_train, y_train)                                           # Train the model using the training sets. 
-y_pred_XGB =XGB_model.predict(X_test)                                     # Make predictions using the testing sets.
-
-## Evaluation errors
-
-MAE_XGB=metrics.mean_absolute_error(y_test,y_pred_XGB)                    # Mean Abloslute Error: is the mean of the absolute value of the errors.
-MSE_XGB=metrics.mean_squared_error(y_test,y_pred_XGB)                     # Mean Squared Error: is the mean of the squared errors.
-RMSE_XGB= np.sqrt(metrics.mean_squared_error(y_test,y_pred_XGB))          # Root Mean squared Error: is the quare root of the MSE
-cvRMSE_XGB=RMSE_XGB/np.mean(y_test)                                       # Coefficient of Variation of the RMSE.
-print(MAE_XGB,MSE_XGB,RMSE_XGB,cvRMSE_XGB)
-
 
 # Results:
     # This model appears to be the better one.
@@ -864,20 +846,8 @@ def render_reg (Regression):
               
                        
     if Regression==2:
-        return html.Div([   
-              dcc.Graph(
-                figure={
-                    "data":[
-                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
-                        {'x': df_model.index, 'y': y_pred_XGB, 'type': 'line', 'name': 'Power predicted'},
-
-                        ],
-                   'layout': {
-                       'title': 'Extreme Gradient boosting'
-            }
-        }
-    ), 
-    
+        return html.Div([html.H2('hey')   
+              
     ])
               
                        
@@ -929,7 +899,7 @@ def render_regp (Performance):
             figure={
             'data': [
             {'x': ['RF'], 'y': [MAE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [MAE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['XGB'], 'y': [0.5], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [MAE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
             {'x': ['NN'], 'y': [MAE_NN], 'type': 'bar', 'name': 'Neural Network'},
            
@@ -948,7 +918,7 @@ def render_regp (Performance):
             figure={
            'data': [
             {'x': ['RF'], 'y': [MSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [MSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [MSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
             {'x': ['NN'], 'y': [MSE_NN], 'type': 'bar', 'name': 'Neural Network'},
            
@@ -968,7 +938,7 @@ def render_regp (Performance):
             figure={
            'data': [
             {'x': ['RF'], 'y': [RMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [RMSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [RMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
             {'x': ['NN'], 'y': [RMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
            
@@ -988,7 +958,7 @@ def render_regp (Performance):
             figure={
             'data': [
             {'x': ['RF'], 'y': [cvRMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [cvRMSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [cvRMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
             {'x': ['NN'], 'y': [cvRMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
            
