@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun May 16 20:15:12 2021
-
 @author: danilo
 """
 # -*- coding: utf-8 -*-
@@ -24,9 +23,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import base64
 
-#Import libraries for feature selection, regression models and clustering
-from sklearn.feature_selection import SelectKBest                              # selection method
-from sklearn.feature_selection import f_regression, mutual_info_regression     # score metrix
+#Import libraries for feature selection, regression models and clustering     # score metrix
 from sklearn.ensemble import RandomForestRegressor                             # Random Forest Regressor is used
 from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
 from sklearn import  metrics                            #To see the performance
@@ -192,7 +189,6 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 
 
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
 
 ## EDA 1  
 
@@ -472,8 +468,24 @@ def update_graph2(value):
 
 
 #----------------------------------------------------------------------
+
+# FEATURE SELECTION AND ENGINEERING:
+    # It consist in choosing the set of relevant variables that can be used to develop a model.
+    # It is used to improve the accuracy, avoid overfitting and reduce the complexity of the model.
+    
+ddf= rdt_clean
+ddf = ddf.drop (columns = 'Date')
+ddf['Months'] = ddf.index.month 
+ddf['Week Day'] = ddf.index.dayofweek                                  # Add day of week column
+
+
+
+##To calculate the power at a certain time instant, we need to know the power at time t-1
+ddf['Power-1']=ddf['Power[kW]'].shift(1)                               # Previous hour consumption
+ddf=ddf.dropna()                                                       # Drop NaN values
+
+
 ## Dashboard
-## Feature selection
 
 
 pag5_layout =html.Div([
