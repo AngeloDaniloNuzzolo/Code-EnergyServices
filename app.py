@@ -183,19 +183,6 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 # EXPLORATORY DATA ANALYSIS (Raw data cleaned)
     # The EDA is a philosophy to explore data (mostly with visual representation) and propose new hypothesis.
 
-print (raw_data_tot.describe())                                                # quick statistical check
-##Comments
-     # 1.: The minimum and maximum values of the features appear reasonable;
-     # 2.: Holiday=1, no Holiday=0, it can mean calendar holiday or summer holiday;
-
-
-## Calculate basic statistic : Correlations
-correlation=raw_data_tot.corr('spearman')
-print (correlation)
-## Correlation:
-     #1.: Spearman correlation = 1  indicates a perfect association between ranks;
-     #2.: Spearman correlation = -1  indicates a perfect negative association between ranks;
-     #3.: Spearman correlation = 0  indicates no association between ranks.
 
 ## Comments : 
     # It can be noticed a positive correlation between temperature and power, this means that an increasing of temperature leads to an increase in power consumption (air conditioners or fans are turned on).
@@ -526,9 +513,7 @@ X=X[:,[1,2,3,4,5,6,7,8]]                                                       #
 
 features=SelectKBest(k=5,score_func=f_regression)                              # Test different k number of features, uses f-test ANOVA
 fit=features.fit(X,Y)                                                          # calculates f_regression of the features (calculates the correlation between features and output )
-print(fit.scores_)
-features_results=fit.transform(X)
-print(features_results)                                                        # k=5 : Power-1, Solar Radiation, Week day,Relative Humidity, temperature
+features_results=fit.transform(X)                                                        # k=5 : Power-1, Solar Radiation, Week day,Relative Humidity, temperature
 ## Comments :
     # from there, the highest value obtained for Y gives the value that most affect the forecasting.
     # the output shows the pearson correlation between feature and power. The highest value shows the highest correlation.
@@ -701,7 +686,6 @@ MAE_RF=metrics.mean_absolute_error(y_test,y_pred_RF)                   # Mean Ab
 MSE_RF=metrics.mean_squared_error(y_test,y_pred_RF)                    # Mean Squared Error: is the mean of the squared errors.
 RMSE_RF= np.sqrt(metrics.mean_squared_error(y_test,y_pred_RF))         # Root Mean squared Error: is the quare root of the MSE
 cvRMSE_RF=RMSE_RF/np.mean(y_test)                                      # Coefficient of Variation of the RMSE.
-print(MAE_RF,MSE_RF,RMSE_RF,cvRMSE_RF)
 
 # Results:
     # There is a very good fitting of the data.
@@ -744,7 +728,6 @@ MAE_BT=metrics.mean_absolute_error(y_test,y_pred_BT)                # Mean Ablos
 MSE_BT=metrics.mean_squared_error(y_test,y_pred_BT)                 # Mean Squared Error: is the mean of the squared errors.
 RMSE_BT= np.sqrt(metrics.mean_squared_error(y_test,y_pred_BT))      # Root Mean squared Error: is the quare root of the MSE
 cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficient of Variation of the RMSE.
-print(MAE_BT,MSE_BT,RMSE_BT,cvRMSE_BT)
 
 
 ## Results:
@@ -779,7 +762,6 @@ MAE_NN=metrics.mean_absolute_error(y_test,y_pred_NN)            # Mean Abloslute
 MSE_NN=metrics.mean_squared_error(y_test,y_pred_NN)             # Mean Squared Error: is the mean of the squared errors.
 RMSE_NN= np.sqrt(metrics.mean_squared_error(y_test,y_pred_NN))  # Root Mean squared Error: is the quare root of the MSE.
 cvRMSE_NN=RMSE_NN/np.mean(y_test)                               # Coefficient of Variation of the RMSE.
-print(MAE_NN,MSE_NN,RMSE_NN,cvRMSE_NN)
 
 
 
