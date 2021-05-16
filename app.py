@@ -474,68 +474,6 @@ def update_graph2(value):
     return (scatterplot2)
        
 
- 
-#----------------------------------------------------------
-
-# FEATURE SELECTION AND ENGINEERING:
-    # It consist in choosing the set of relevant variables that can be used to develop a model.
-    # It is used to improve the accuracy, avoid overfitting and reduce the complexity of the model.
-    
-ddf= rdt_clean
-ddf = ddf.drop (columns = 'Date')
-ddf['Months'] = ddf.index.month 
-ddf['Week Day'] = ddf.index.dayofweek                                  # Add day of week column
-
-
-
-##To calculate the power at a certain time instant, we need to know the power at time t-1
-ddf['Power-1']=ddf['Power[kW]'].shift(1)                               # Previous hour consumption
-ddf=ddf.dropna()                                                       # Drop NaN values
-
-
-
-## The function of feature section doesn't work with data frame but array structure.
-## The Power is the output, and the the other features are the input.
-## Define input and outputs.
-X=ddf.values                                                               # in there i copy the values
-
-Y=X[:,0]                                                                       # the output of the model is the power
-X=X[:,[1,2,3,4,5,6,7,8]]                                                       # x is substituted with the array defined by X=df_data.values
-
-
-## Filter Methods (k best):
-    # It uses measures to score the data features (Correlation, mutual information,t-test).
-    # The top score features are chosen to be part of the model
-    # Redundancy in selected features.
-    
-
-
-
-features=SelectKBest(k=5,score_func=f_regression)                              # Test different k number of features, uses f-test ANOVA
-fit=features.fit(X,Y)                                                          # calculates f_regression of the features (calculates the correlation between features and output )
-features_results=fit.transform(X)                                                        # k=5 : Power-1, Solar Radiation, Week day,Relative Humidity, temperature
-## Comments :
-    # from there, the highest value obtained for Y gives the value that most affect the forecasting.
-    # the output shows the pearson correlation between feature and power. The highest value shows the highest correlation.
-    # K is used to understand how many features we want to stamp at the end. k=1 it means that it stamp the most important.
-
-
-## Mutual information:
-features=SelectKBest(k=5,score_func=mutual_info_regression)                    # Test different k number of features, uses mutual information
-fit=features.fit(X,Y) 
-print(fit.scores_)
-features_results=fit.transform(X)
-print(features_results)                                                        # k=5 :Power-1, Hour, Solar radiation, Week day, Temperature
-featureSelected= [len(fit.scores_)]
-
-
-## Random Forest Regressor method
-
-model = RandomForestRegressor()                                                # Verification of chosen features
-model.fit(X, Y)
-print(model.feature_importances_)                                              # Power-1, Hour, solar radiation, Temperature, Week day
-
-
 
 
 #----------------------------------------------------------------------
