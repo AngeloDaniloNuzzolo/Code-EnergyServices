@@ -681,41 +681,6 @@ cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficien
 
 #---------------------------------------------------------------------------------------------
 
-# Neural Networks :
-    # The MPLP regressor is a supervised learning algorithm that learns a function by training on a dataset.
-    # Between the input and the output layer, there can be one or more non-linear layers, called hidden layers.
-    # The output layer receives the values from the last hidden layer and transforms them into output values.
-    # Being a Feed Forward model the connection between the nodes do not form a cycle.
-    
-                                                    
-parameters ={'hidden_layer_sizes': (10,40,40,10),               # The ith element represents the number of neurons in the ith hidden layer in this case the Network is composed by 4 hidden layers with 100 neurons. 
-             'activation': 'relu',                              # Activation function for the hidden layer: 'relu’, the rectified linear unit function, returns f(x) = max(0, x)
-             'solver':'adam',                                   # The solver for weight optimization: ‘adam’ refers to a stochastic gradient-based optimizer proposed by Kingma, Diederik, and Jimmy Ba.
-             'learning_rate': 'constant'                        # Learning rate schedule for weight updates: ‘constant’ is a constant learning rate.
-             }
-##Comments:
-    # Above the 200 iterations there is a warning of non-convergence of the model.
-    # Increasing the number of neurons it will increase also the number of interations and so the running time, for this reason the number of neurons are not so high.
-    # The paramters are set to show the best results.
-    
-NN_model = MLPRegressor(**parameters)                           # Create the MLP regressor object with speific parameters.
-NN_model.fit(X_train,y_train)                                   # Train the model using the training sets. 
-y_pred_NN = NN_model.predict(X_test)                            # Make predictions using the testing sets.
-
-
-MAE_NN=metrics.mean_absolute_error(y_test,y_pred_NN)            # Mean Abloslute Error: is the mean of the absolute value of the errors.
-MSE_NN=metrics.mean_squared_error(y_test,y_pred_NN)             # Mean Squared Error: is the mean of the squared errors.
-RMSE_NN= np.sqrt(metrics.mean_squared_error(y_test,y_pred_NN))  # Root Mean squared Error: is the quare root of the MSE.
-cvRMSE_NN=RMSE_NN/np.mean(y_test)                               # Coefficient of Variation of the RMSE.
-
-
-
-## Results:
-    # Different from the other methods, the Neural one have less extreme points.
-    # The model fail to get the thin line, just because it needs a huge amount of data to train.
-    # This condition is reflected to the performance, indeed it does not appear as the best model considered.
-
-
 #----------------------------------------------
 
 ## Dahboard
@@ -732,7 +697,7 @@ pag6_layout = html.Div([
                       {'label': 'Random Forest', 'value':1},
                       {'label': 'Extreme Gradient boosting', 'value':2},
                       {'label': 'Bootstrapping ', 'value':3},
-                      {'label': 'Neural Network', 'value':4},
+                   
                       ],
                   value=1
                   ),
@@ -798,23 +763,7 @@ def render_regr (Regression):
     
               ])
               
-                      
-    if Regression==4:
-        return html.Div([   
-               dcc.Graph(
-                figure={
-                    "data":[
-                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
-                        {'x':df_model.index, 'y': y_pred_NN, 'type': 'line', 'name': 'Power predicted'},
-
-                        ],
-                   'layout': {
-                       'title': 'Neural Network'
-            }
-        }
-    ),
-               ])
-               
+    
     
 
 # Callback for dropdown menù
@@ -831,7 +780,7 @@ def render_regp (Performance):
             {'x': ['RF'], 'y': [MAE_RF], 'type': 'bar', 'name': 'Random Forest'},
             {'x': ['XGB'], 'y': [0.5], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [MAE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-            {'x': ['NN'], 'y': [MAE_NN], 'type': 'bar', 'name': 'Neural Network'},
+            
            
                         
             ],
@@ -850,7 +799,7 @@ def render_regp (Performance):
             {'x': ['RF'], 'y': [MSE_RF], 'type': 'bar', 'name': 'Random Forest'},
             {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [MSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-            {'x': ['NN'], 'y': [MSE_NN], 'type': 'bar', 'name': 'Neural Network'},
+          
            
                         
             ],
@@ -870,8 +819,7 @@ def render_regp (Performance):
             {'x': ['RF'], 'y': [RMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
             {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [RMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-            {'x': ['NN'], 'y': [RMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
-           
+         
                         
             ],
             'layout': {
@@ -890,7 +838,7 @@ def render_regp (Performance):
             {'x': ['RF'], 'y': [cvRMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
             {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
             {'x': ['BT'], 'y': [cvRMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-            {'x': ['NN'], 'y': [cvRMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
+          
            
                         
             ],
