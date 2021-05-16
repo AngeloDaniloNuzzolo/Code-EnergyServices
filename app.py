@@ -355,15 +355,10 @@ def update_graph(value, points):
 # Clean data from outliers with IQR
 
 Q1 = df['Power[kW]'].quantile(0.25)                                                                            # First quartile
-print (Q1)
 Q3 =df['Power[kW]'].quantile(0.75)                                                                              # Third quartile
-print (Q3)
-IQR = Q3- Q1
-print (IQR)                                                                                                               # Inter quartile range
+IQR = Q3- Q1                                                                                                               # Inter quartile range
 
 rdt_clean =df[((df['Power[kW]'] > (Q1 - 1.5*IQR)) & (df['Power[kW]'] < (Q3 + 1.5 *IQR)))]   # we accept all the data in the interval
-df_sort_kW = rdt_clean.sort_values (by = 'Power[kW]', ascending = False)
-print (df_sort_kW)
 # Comments :
     # The points outside the interval are deleted.
  
