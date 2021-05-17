@@ -792,7 +792,7 @@ def render_regr (Regression):
               
                        
     if Regression==2:
-        return html.Div([ html.H6('ciao)  
+        return html.Div([ html.H6('ciao')  
               
     ])
               
