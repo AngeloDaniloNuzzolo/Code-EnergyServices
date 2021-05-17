@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 17 18:28:48 2021
 
-@author: danilo
+@author: Danilo
 """
 
 
