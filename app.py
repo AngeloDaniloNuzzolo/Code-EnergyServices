@@ -615,7 +615,7 @@ def render_feat (feature):
     # It consist on creating multiple datasets from the original one, develop indipendet learners for each dataset and aggregate them in a certain way.
 
 
-p
+
 #---------------------------------------------------------------------------------------------
 
 #----------------------------------------------
