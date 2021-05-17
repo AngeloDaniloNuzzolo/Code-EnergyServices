@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 16 20:15:12 2021
+Created on Mon May 17 18:28:48 2021
+
 @author: danilo
 """
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May  6 11:18:26 2021
-@author: danilo
-"""
+
+
 # Import libraries
-import numpy as np  
+
 import pandas as pd                           # Allows reading, writing and handling data.
         
 
@@ -24,11 +22,7 @@ import plotly.express as px
 import base64
 
 #Import libraries for feature selection, regression models and clustering     # score metrix
-from sklearn.ensemble import RandomForestRegressor                             # Random Forest Regressor is used
-from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
-from sklearn import  metrics                            #To see the performance
-from sklearn.neural_network import MLPRegressor 
-from sklearn.ensemble import BaggingRegressor
+
 from sklearn.cluster import KMeans
 
 # Import Data already cleaned
