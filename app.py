@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May 17 18:28:48 2021
-
-@author: danilo
-"""
 
 
 ## Import libraries
@@ -21,8 +15,7 @@ import plotly.express as px
 import base64
 
 #Import libraries for feature selection, regression models and clustering
-from sklearn.feature_selection import SelectKBest                              # selection method
-from sklearn.feature_selection import f_regression, mutual_info_regression     # score metrix
+
 from sklearn.ensemble import RandomForestRegressor                             # Random Forest Regressor is used
 from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
 from sklearn import  metrics                            #To see the performance
@@ -139,36 +132,7 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 #----------------------------------------------------------------------
 
 
-# EXPLORATORY DATA ANALYSIS (Raw data cleaned)
-    # The EDA is a philosophy to explore data (mostly with visual representation) and propose new hypothesis.
 
-print (raw_data_tot.describe())                                                # quick statistical check
-##Comments
-     # 1.: The minimum and maximum values of the features appear reasonable;
-     # 2.: Holiday=1, no Holiday=0, it can mean calendar holiday or summer holiday;
-
-
-## Calculate basic statistic : Correlations
-correlation=raw_data_tot.corr('spearman')
-print (correlation)
-## Correlation:
-     #1.: Spearman correlation = 1  indicates a perfect association between ranks;
-     #2.: Spearman correlation = -1  indicates a perfect negative association between ranks;
-     #3.: Spearman correlation = 0  indicates no association between ranks.
-
-## Comments : 
-    # It can be noticed a positive correlation between temperature and power, this means that an increasing of temperature leads to an increase in power consumption (air conditioners or fans are turned on).
-    # In the case of Solar Radiation it is possible to see a important positive correlation, this means that the trade off between the possibility to turning the light off (saving energy) and the increasing of temperature is won by the latter.
-    # The negative correlation between RH and power is explained by the necessity to humidify the air with an air conditioner when the RH drops below 40%.
-    # The correlation between Holiday and Power is negative beacuse people are generally not at home during the Holidays.
-
-
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
-
-## EDA 1  
-
-# Time series graph
 
 tab2_layout =  html.Div([
                html.H3('Time series graph',
@@ -247,18 +211,7 @@ def render_reg (ts):
               ])
               
             
- 
-#Comments:
-        # It is clearly possible to notice power peaks at low and high temperaure, this allow us to understand that the building is heated and cooled electrically, with greater consumption during the summer months.
-        # During the holidays the consumption is low.
-        # The 'trade off' between the high consumption during the night due to the switchig lihts on , and the high consumption at high solar radiation during the summer months is clearly visible.
 
-## EDA 2   
-# Violin plots, to visualize outliers
-
-#Notes:
-      # Violin plots are similar to box plots, except that they also show the probability density of the data at different values.
-    
 
 tab3_layout=html.Div([
     html.H3('Violin Plots',
@@ -332,18 +285,7 @@ IQR = Q3- Q1                                                                    
 
 rdt_clean =df[((df['Power[kW]'] > (Q1 - 1.5*IQR)) & (df['Power[kW]'] < (Q3 + 1.5 *IQR)))]   # we accept all the data in the interval
 df_sort_kW = rdt_clean.sort_values (by = 'Power[kW]', ascending = False)
-# Comments :
-    # The points outside the interval are deleted.
- 
-    
- 
-#------------------------------------------------------------------------------ 
 
-## EDA 3
-
-## In this section is evaluated the correlation between power, temperature and solar radiation each day of the year.
-
-## Dashboard 
 
 dfe=rdt_clean
 dfe = dfe.set_index(pd.to_datetime(dfe['Date']))                   # make Date into 'datetime' and then index
@@ -445,9 +387,7 @@ def update_graph2(value):
  
 #----------------------------------------------------------
 
-# FEATURE SELECTION AND ENGINEERING:
-    # It consist in choosing the set of relevant variables that can be used to develop a model.
-    # It is used to improve the accuracy, avoid overfitting and reduce the complexity of the model.
+
     
 ddf= rdt_clean
 ddf = ddf.drop (columns = 'Date')
@@ -462,50 +402,6 @@ ddf=ddf.dropna()                                                       # Drop Na
 
 
 
-## The function of feature section doesn't work with data frame but array structure.
-## The Power is the output, and the the other features are the input.
-## Define input and outputs.
-X=ddf.values                                                               # in there i copy the values
-
-Y=X[:,0]                                                                       # the output of the model is the power
-X=X[:,[1,2,3,4,5,6,7,8]]                                                       # x is substituted with the array defined by X=df_data.values
-
-
-## Filter Methods (k best):
-    # It uses measures to score the data features (Correlation, mutual information,t-test).
-    # The top score features are chosen to be part of the model
-    # Redundancy in selected features.
-    
-
-
-
-features=SelectKBest(k=5,score_func=f_regression)                              # Test different k number of features, uses f-test ANOVA
-fit=features.fit(X,Y)                                                          # calculates f_regression of the features (calculates the correlation between features and output )
-features_results=fit.transform(X)  
-print(features_results)                                                      # k=5 : Power-1, Solar Radiation, Week day,Relative Humidity, temperature
-## Comments :
-    # from there, the highest value obtained for Y gives the value that most affect the forecasting.
-    # the output shows the pearson correlation between feature and power. The highest value shows the highest correlation.
-    # K is used to understand how many features we want to stamp at the end. k=1 it means that it stamp the most important.
-
-
-## Mutual information:
-features=SelectKBest(k=5,score_func=mutual_info_regression)                    # Test different k number of features, uses mutual information
-fit=features.fit(X,Y) 
-features_results=fit.transform(X)                                                      # k=5 :Power-1, Hour, Solar radiation, Week day, Temperature
-featureSelected= [len(fit.scores_)]
-print(features_results) 
-
-
-## Random Forest Regressor method
-
-model = RandomForestRegressor()                                                # Verification of chosen features
-model.fit(X, Y)                                               # Power-1, Hour, solar radiation, Temperature, Week day
-print(model.feature_importances_) 
-
-
-
-#----------------------------------------------------------------------
 ## Dashboard
 ## Feature selection
 
@@ -653,7 +549,7 @@ MAE_RF=metrics.mean_absolute_error(y_test,y_pred_RF)                   # Mean Ab
 MSE_RF=metrics.mean_squared_error(y_test,y_pred_RF)                    # Mean Squared Error: is the mean of the squared errors.
 RMSE_RF= np.sqrt(metrics.mean_squared_error(y_test,y_pred_RF))         # Root Mean squared Error: is the quare root of the MSE
 cvRMSE_RF=RMSE_RF/np.mean(y_test)                                      # Coefficient of Variation of the RMSE.
-print(MAE_RF,MSE_RF,RMSE_RF,cvRMSE_RF)
+
 
 # Results:
     # There is a very good fitting of the data.
@@ -687,7 +583,7 @@ MAE_BT=metrics.mean_absolute_error(y_test,y_pred_BT)                # Mean Ablos
 MSE_BT=metrics.mean_squared_error(y_test,y_pred_BT)                 # Mean Squared Error: is the mean of the squared errors.
 RMSE_BT= np.sqrt(metrics.mean_squared_error(y_test,y_pred_BT))      # Root Mean squared Error: is the quare root of the MSE
 cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficient of Variation of the RMSE.
-print(MAE_BT,MSE_BT,RMSE_BT,cvRMSE_BT)
+
 
 
 ## Results:
@@ -722,7 +618,7 @@ MAE_NN=metrics.mean_absolute_error(y_test,y_pred_NN)            # Mean Abloslute
 MSE_NN=metrics.mean_squared_error(y_test,y_pred_NN)             # Mean Squared Error: is the mean of the squared errors.
 RMSE_NN= np.sqrt(metrics.mean_squared_error(y_test,y_pred_NN))  # Root Mean squared Error: is the quare root of the MSE.
 cvRMSE_NN=RMSE_NN/np.mean(y_test)                               # Coefficient of Variation of the RMSE.
-print(MAE_NN,MSE_NN,RMSE_NN,cvRMSE_NN)
+
 
 
 
