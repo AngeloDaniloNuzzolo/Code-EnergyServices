@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon May 17 18:28:48 2021
 
-@author: Danilo
+@author: danilo
 """
 
 
-# Import libraries
-
+## Import libraries
+import numpy as np  
 import pandas as pd                           # Allows reading, writing and handling data.
         
 
@@ -16,12 +17,18 @@ from dash.dependencies import Input, Output
 import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
 import plotly.express as px
 import base64
 
-#Import libraries for feature selection, regression models and clustering     # score metrix
-
+#Import libraries for feature selection, regression models and clustering
+from sklearn.feature_selection import SelectKBest                              # selection method
+from sklearn.feature_selection import f_regression, mutual_info_regression     # score metrix
+from sklearn.ensemble import RandomForestRegressor                             # Random Forest Regressor is used
+from sklearn.model_selection import train_test_split    #Function that aoutomatically separate the triain data to the test data
+from sklearn import  metrics                            #To see the performance
+from xgboost import XGBRegressor
+from sklearn.neural_network import MLPRegressor 
+from sklearn.ensemble import BaggingRegressor
 from sklearn.cluster import KMeans
 
 # Import Data already cleaned
@@ -33,79 +40,42 @@ df['Hour'] = df.index.hour
 df.rename(columns = {'Solar_Radiation[W/m^2]': 'Solar_Rad[W/m^2]', 'Relative_Humidity': 'RH'}, inplace = True)
 
 # Dashboard implementation
-
-# Application
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-# Server
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server= app.server
-
-# Adding image for clustering   
 image_dpattern= 'assets/clust.png'
 encoded_image_dailyp = base64.b64encode(open(image_dpattern, 'rb').read())
-
-# Sidebar style definition
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "16rem",
-    "padding": "2rem 1rem",
-    "background-color": "#f8f9fa",
-}
-
-# Padding for the page content
-CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
-    "padding": "2rem 1rem",
-}
-
-sidebar = html.Div([
-          html.Center(
-        (html.Img(src= 'https://www.eduopinions.com/wp-content/uploads/2018/05/InstitutoSuperiorTecnico-logo.png',
-        style = {'height':'11%', 'width':'30%' , 'text-align':'center'}))),
-        
-        html.H4('Central Building Consumption forecast ', className="display-5",
-                style={'color':'blue', 'text-align':'center'}),
-        html.Hr(),
-        html.P ('Angelo Danilo Nuzzolo ist1100830', style={'text-align':'center'}),
-        html.Hr(),
-        
-        dbc.Nav(
-            [
-                dbc.NavLink("Raw data display", href="/", active="exact"),
-                dbc.NavLink("EDA 1", href="/page-1", active="exact"),
-                dbc.NavLink("EDA 2", href="/page-2", active="exact"),
-                 dbc.NavLink("EDA 3", href="/page-3", active="exact"),
-                dbc.NavLink("Feature selection", href="/page-4", active="exact"),
-                dbc.NavLink("Regression model", href="/page-5", active="exact"),
-                dbc.NavLink("Clustering", href="/page-6", active="exact"),
-            ],
-            vertical=True,
-            pills=True,
-        ),
-    ],
-    style=SIDEBAR_STYLE,
-)
-
-
-content = html.Div(id="page-content", children=[], style=CONTENT_STYLE)
-
+colors = {
+    'background': '#488A99',
+    'text': '#7FDBFF'}
 # Organization of dashboard in tabs
-app.layout = html.Div([
-    dcc.Location(id="url"),
-    sidebar,
-    content
-
+app.layout = html.Div(
+    style={'backgroundColor' : colors['background']},children =[
+    (html.Img(src= 'https://www.eduopinions.com/wp-content/uploads/2018/05/InstitutoSuperiorTecnico-logo.png',
+    style = {'height':'7%', 'width':'7%' })),
+    html.H1('Central building consumption forecast ',
+    style={'text-align': 'center', 'color':'white'}),
+    html.H6('Angelo Danilo Nuzzolo-ist1100830',
+    style={'color':'lightgrey'}),
+    dcc.Tabs(id='tabs', value='tab-1', children=[
+        dcc.Tab(label='Raw data', value='tab-1'),
+        dcc.Tab(label='Exploratory data analysis 1', value='tab-2'),
+        dcc.Tab(label='Exploratory data analysis 2', value='tab-3'),
+        dcc.Tab(label='Exploratory data analysis 3', value='tab-4'),
+        dcc.Tab(label='Feature selection', value='tab-5'),
+        dcc.Tab(label='Regression models', value='tab-6'),
+        dcc.Tab(label='Clustering', value='tab-7'),
+    ]),
+    html.Div(id='tabs-content')
 ])
 
 ##  RAW DATA VISUALIZATION : Interactive Table 
-pag1_layout = html.Div([
+tab1_layout = html.Div([
                html.H3('Data cleaned table',
-               style={'color':'white','text-align':'center'}),
-               html.P('Interactive table representative data cleaned'),
+               style={'color':'white'}),
+               html.H6('Interactive table representative data cleaned'),
+               html.P('The number of rows are equal to the number of hours in a day,'
+                      'by selecting one o them you are highlighting the mean consumption pattern graph below:'),
                dash_table.DataTable(
         id='datatable-interactivity',
         columns=[
@@ -173,6 +143,19 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 # EXPLORATORY DATA ANALYSIS (Raw data cleaned)
     # The EDA is a philosophy to explore data (mostly with visual representation) and propose new hypothesis.
 
+print (raw_data_tot.describe())                                                # quick statistical check
+##Comments
+     # 1.: The minimum and maximum values of the features appear reasonable;
+     # 2.: Holiday=1, no Holiday=0, it can mean calendar holiday or summer holiday;
+
+
+## Calculate basic statistic : Correlations
+correlation=raw_data_tot.corr('spearman')
+print (correlation)
+## Correlation:
+     #1.: Spearman correlation = 1  indicates a perfect association between ranks;
+     #2.: Spearman correlation = -1  indicates a perfect negative association between ranks;
+     #3.: Spearman correlation = 0  indicates no association between ranks.
 
 ## Comments : 
     # It can be noticed a positive correlation between temperature and power, this means that an increasing of temperature leads to an increase in power consumption (air conditioners or fans are turned on).
@@ -182,12 +165,13 @@ def update_bar(all_rows_data, slctd_row_indices, slctd_rows):
 
 
 
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
 
 ## EDA 1  
 
 # Time series graph
 
-pag2_layout =  html.Div([
+tab2_layout =  html.Div([
                html.H3('Time series graph',
                        style={'color':'white', 'text-align':'center'}),
                html.P('Select between three different time series graph:'),
@@ -277,7 +261,7 @@ def render_reg (ts):
       # Violin plots are similar to box plots, except that they also show the probability density of the data at different values.
     
 
-pag3_layout=html.Div([
+tab3_layout=html.Div([
     html.H3('Violin Plots',
     style={'color':'white', 'text-align':'center'}),
     html.H6('Outliers detection'),
@@ -348,6 +332,7 @@ Q3 =df['Power[kW]'].quantile(0.75)                                              
 IQR = Q3- Q1                                                                                                               # Inter quartile range
 
 rdt_clean =df[((df['Power[kW]'] > (Q1 - 1.5*IQR)) & (df['Power[kW]'] < (Q3 + 1.5 *IQR)))]   # we accept all the data in the interval
+df_sort_kW = rdt_clean.sort_values (by = 'Power[kW]', ascending = False)
 # Comments :
     # The points outside the interval are deleted.
  
@@ -357,7 +342,7 @@ rdt_clean =df[((df['Power[kW]'] > (Q1 - 1.5*IQR)) & (df['Power[kW]'] < (Q3 + 1.5
 
 ## EDA 3
 
-## In this section is evaluated the corellation between power, temperature and solar radiation each day of the year.
+## In this section is evaluated the correlation between power, temperature and solar radiation each day of the year.
 
 ## Dashboard 
 
@@ -377,7 +362,7 @@ mark_values = {1:'January',2:'February',3:'March',4:'April',
                9:'September',10:'October',11:'November',12:'December'}
 
 
-pag4_layout = html.Div([
+tab4_layout = html.Div([
               html.Div([
               html.H3("Scatter plots",
               style={"text-align": "center", "color":"white"}),
@@ -458,9 +443,8 @@ def update_graph2(value):
     return (scatterplot2)
        
 
-
-
-#----------------------------------------------------------------------
+ 
+#----------------------------------------------------------
 
 # FEATURE SELECTION AND ENGINEERING:
     # It consist in choosing the set of relevant variables that can be used to develop a model.
@@ -478,10 +462,56 @@ ddf['Power-1']=ddf['Power[kW]'].shift(1)                               # Previou
 ddf=ddf.dropna()                                                       # Drop NaN values
 
 
+
+## The function of feature section doesn't work with data frame but array structure.
+## The Power is the output, and the the other features are the input.
+## Define input and outputs.
+X=ddf.values                                                               # in there i copy the values
+
+Y=X[:,0]                                                                       # the output of the model is the power
+X=X[:,[1,2,3,4,5,6,7,8]]                                                       # x is substituted with the array defined by X=df_data.values
+
+
+## Filter Methods (k best):
+    # It uses measures to score the data features (Correlation, mutual information,t-test).
+    # The top score features are chosen to be part of the model
+    # Redundancy in selected features.
+    
+
+
+
+features=SelectKBest(k=5,score_func=f_regression)                              # Test different k number of features, uses f-test ANOVA
+fit=features.fit(X,Y)                                                          # calculates f_regression of the features (calculates the correlation between features and output )
+features_results=fit.transform(X)  
+print(features_results)                                                      # k=5 : Power-1, Solar Radiation, Week day,Relative Humidity, temperature
+## Comments :
+    # from there, the highest value obtained for Y gives the value that most affect the forecasting.
+    # the output shows the pearson correlation between feature and power. The highest value shows the highest correlation.
+    # K is used to understand how many features we want to stamp at the end. k=1 it means that it stamp the most important.
+
+
+## Mutual information:
+features=SelectKBest(k=5,score_func=mutual_info_regression)                    # Test different k number of features, uses mutual information
+fit=features.fit(X,Y) 
+features_results=fit.transform(X)                                                      # k=5 :Power-1, Hour, Solar radiation, Week day, Temperature
+featureSelected= [len(fit.scores_)]
+print(features_results) 
+
+
+## Random Forest Regressor method
+
+model = RandomForestRegressor()                                                # Verification of chosen features
+model.fit(X, Y)                                               # Power-1, Hour, solar radiation, Temperature, Week day
+print(model.feature_importances_) 
+
+
+
+#----------------------------------------------------------------------
 ## Dashboard
+## Feature selection
 
 
-pag5_layout =html.Div([
+tab5_layout =html.Div([
              html.H3('Feature selection',
              style={'color':'white', 'text-align':'center'}),
              html.H6('The best features are the ones with higher score'),
@@ -586,7 +616,50 @@ def render_feat (feature):
 # REGRESSION
 
 ## Pre-processing 
+df_model=ddf.drop(columns=['RH','Holiday', 'Months'])
 
+## Recurrent
+X=df_model.values            
+Y=X[:,0]                                               # Output feature : Power
+X=X[:,[1,2,3,4,5]]                                     # Input features : Temperature, Solar radiation, Hour, Week day, Power-1
+                                  
+X_train, X_test, y_train, y_test = train_test_split(X,Y)
+
+
+# Regression models
+
+# Random forest :
+    # Random forest is a supervised learning algorithm. The "forest" it builds, is an ensemble(combination of learners) of decision trees, usually trained with the “bagging” method (combination of many indipendent models usingaveraging tecnique).
+    # It adds additional randomness to the model, while growing the trees. Instead of searching for the most important feature while splitting a node, it searches for the best feature among a random subset of features (forest)
+    # It solve the limitation of the single decision tree in create step wise function.
+    # The main limitation of random forest is that a large number of trees can make the algorithm too slow and ineffective for real-time predictions
+
+
+parameters = {'bootstrap': False,                                       # Whether bootstrap samples are used when building trees. If False, the whole dataset is used to build each tree. 
+              'n_estimators': 250,                                      # The number of trees in the forest.
+              'min_samples_split': 10,                                  # The minimum number of samples required to split an internal node.
+              'max_features': 'log2',                                   # The number of features to consider when looking for the best split: f 'log2', then max_features=log2(n_features).
+              'max_depth': 20,                                          # The maximum depth of the tree: with 'None', then nodes are expanded  until all leaves contain less than min_samples_split samples.
+              'max_leaf_nodes': None}                                   # The minimum number of samples required to be at a leaf node.
+## Comments:
+    # This set of paramters gives the best performance for Random forest model.                                                                                                                                                                                           
+
+RF_model = RandomForestRegressor(**parameters)                         # Create the Random forest regressor object with speific parameters.
+RF_model.fit(X_train, y_train)                                         # Train the model using the training sets
+y_pred_RF = RF_model.predict(X_test)                                   # Make predictions using the testing set
+
+
+#Evaluate errors
+MAE_RF=metrics.mean_absolute_error(y_test,y_pred_RF)                   # Mean Abloslute Error: is the mean of the absolute value of the errors.
+MSE_RF=metrics.mean_squared_error(y_test,y_pred_RF)                    # Mean Squared Error: is the mean of the squared errors.
+RMSE_RF= np.sqrt(metrics.mean_squared_error(y_test,y_pred_RF))         # Root Mean squared Error: is the quare root of the MSE
+cvRMSE_RF=RMSE_RF/np.mean(y_test)                                      # Coefficient of Variation of the RMSE.
+print(MAE_RF,MSE_RF,RMSE_RF,cvRMSE_RF)
+
+# Results:
+    # There is a very good fitting of the data.
+    # In terms of errors the model shows higher performances respect the previous ones with a cvRMSE decreased to 5,5%
+    
 
 #----------------------------------------------------------------------
 
@@ -594,6 +667,23 @@ def render_feat (feature):
 # Extreme Gradient Boosting :
     # XGBoost is basically designed to enhance the performance and speed of a Machine Learning model, it is a Gradient boosting with second order derivative.
 
+
+parameters = {'n_estimators': 700,                                        # The number of boosting stages to perform. 
+              'max_depth': 6,                                             # Maximum depth of the individual regression estimators. The maximum depth limits the number of nodes in the tree.
+              'learning_rate': 0.01, }                                    # Learning rate shrinks the contribution of each tree. There is a trade-off between learning_rate and n_estimators.
+                                                                          # Loss function to be optimized: 'ls’ refers to least squares regression.
+
+XGB_model = XGBRegressor(**parameters)                                    # Create the XGB regressor object with speific parameters.
+XGB_model.fit(X_train, y_train)                                           # Train the model using the training sets. 
+y_pred_XGB =XGB_model.predict(X_test)                                     # Make predictions using the testing sets.
+
+## Evaluation errors
+
+MAE_XGB=metrics.mean_absolute_error(y_test,y_pred_XGB)                    # Mean Abloslute Error: is the mean of the absolute value of the errors.
+MSE_XGB=metrics.mean_squared_error(y_test,y_pred_XGB)                     # Mean Squared Error: is the mean of the squared errors.
+RMSE_XGB= np.sqrt(metrics.mean_squared_error(y_test,y_pred_XGB))          # Root Mean squared Error: is the quare root of the MSE
+cvRMSE_XGB=RMSE_XGB/np.mean(y_test)                                       # Coefficient of Variation of the RMSE.
+print(MAE_XGB,MSE_XGB,RMSE_XGB,cvRMSE_XGB)
 
 
 # Results:
@@ -608,21 +698,264 @@ def render_feat (feature):
     # It consist on creating multiple datasets from the original one, develop indipendet learners for each dataset and aggregate them in a certain way.
 
 
+parameters = {'bootstrap': bool,                                    # Whether samples are drawn with replacement. If False, sampling without replacement is performed.
+              'base_estimator': None,                               # The base estimator to fit on random subsets of the dataset. If None, then the base estimator is a DecisionTreeRegressor.
+              'n_estimators':100,                                   # The number of base estimators in the ensemble.
+              'warm_start' : True}                                  # Controls the random resampling of the original dataset (sample wise and feature wise).
+
+
+BT_model = BaggingRegressor(**parameters)                           # Create the bagging regressor object with speific parameters.
+BT_model.fit(X_train, y_train)                                      # Train the model using the training sets. 
+y_pred_BT =BT_model.predict(X_test)                                 # Make predictions using the testing sets.
+
+## Evaluation errors
+
+MAE_BT=metrics.mean_absolute_error(y_test,y_pred_BT)                # Mean Abloslute Error: is the mean of the absolute value of the errors.
+MSE_BT=metrics.mean_squared_error(y_test,y_pred_BT)                 # Mean Squared Error: is the mean of the squared errors.
+RMSE_BT= np.sqrt(metrics.mean_squared_error(y_test,y_pred_BT))      # Root Mean squared Error: is the quare root of the MSE
+cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficient of Variation of the RMSE.
+print(MAE_BT,MSE_BT,RMSE_BT,cvRMSE_BT)
+
+
+## Results:
+   # The model works pretty well, the performance results are comparable with the Random Forecast model.
+
 
 #---------------------------------------------------------------------------------------------
+
+# Neural Networks :
+    # The MPLP regressor is a supervised learning algorithm that learns a function by training on a dataset.
+    # Between the input and the output layer, there can be one or more non-linear layers, called hidden layers.
+    # The output layer receives the values from the last hidden layer and transforms them into output values.
+    # Being a Feed Forward model the connection between the nodes do not form a cycle.
+    
+                                                    
+parameters ={'hidden_layer_sizes': (10,40,40,10),               # The ith element represents the number of neurons in the ith hidden layer in this case the Network is composed by 4 hidden layers with 100 neurons. 
+             'activation': 'relu',                              # Activation function for the hidden layer: 'relu’, the rectified linear unit function, returns f(x) = max(0, x)
+             'solver':'adam',                                   # The solver for weight optimization: ‘adam’ refers to a stochastic gradient-based optimizer proposed by Kingma, Diederik, and Jimmy Ba.
+             'learning_rate': 'constant'                        # Learning rate schedule for weight updates: ‘constant’ is a constant learning rate.
+             }
+##Comments:
+    # Above the 200 iterations there is a warning of non-convergence of the model.
+    # Increasing the number of neurons it will increase also the number of interations and so the running time, for this reason the number of neurons are not so high.
+    # The paramters are set to show the best results.
+    
+NN_model = MLPRegressor(**parameters)                           # Create the MLP regressor object with speific parameters.
+NN_model.fit(X_train,y_train)                                   # Train the model using the training sets. 
+y_pred_NN = NN_model.predict(X_test)                            # Make predictions using the testing sets.
+
+
+MAE_NN=metrics.mean_absolute_error(y_test,y_pred_NN)            # Mean Abloslute Error: is the mean of the absolute value of the errors.
+MSE_NN=metrics.mean_squared_error(y_test,y_pred_NN)             # Mean Squared Error: is the mean of the squared errors.
+RMSE_NN= np.sqrt(metrics.mean_squared_error(y_test,y_pred_NN))  # Root Mean squared Error: is the quare root of the MSE.
+cvRMSE_NN=RMSE_NN/np.mean(y_test)                               # Coefficient of Variation of the RMSE.
+print(MAE_NN,MSE_NN,RMSE_NN,cvRMSE_NN)
+
+
+
+## Results:
+    # Different from the other methods, the Neural one have less extreme points.
+    # The model fail to get good results, just because it needs a huge amount of data to train.
+    # This condition is reflected to the performance, indeed it does not appear as the best model considered.
+
 
 #----------------------------------------------
 
 ## Dahboard
 ## Regession models
 
-pag6_layout = html.Div([
-              html.H3('Regression Model')
-             
+tab6_layout = html.Div([
+              html.H3('Regression Model',
+              style={'color':'white', 'text-align':'center'}), 
+              html.H6('The best model is the Extreme Gradient boosting ( it is the one with lower errors)'),
+              html.P('Select the Regression model and Errors performance :'),
+              dcc.Dropdown(
+                  id ='dropd-reg',
+                  options=[
+                      {'label': 'Random Forest', 'value':1},
+                      {'label': 'Extreme Gradient boosting', 'value':2},
+                      {'label': 'Bootstrapping ', 'value':3},
+                      {'label': 'Neural Network', 'value':4},
+                      ],
+                  value=1
+                  ),
+              html.Div (id='reg'),
+              dcc.Dropdown(
+                  id ='dropd-per',
+                  options=[
+                      {'label': 'Mean Abloslute Error', 'value':1},
+                      {'label': 'Mean Squared Error', 'value':2},
+                      {'label': 'Root Mean squared Error', 'value':3},
+                      {'label': 'Variation Coeff. of RMSE', 'value':4},
+                      ],
+                  value=1
+                  ),
+              html.Div (id='per')
 ])
 
 
+@app.callback(Output('reg', 'children'),
+              Input('dropd-reg', 'value'))
+def render_regr (Regression):
+                      
+                      
+    if Regression==1:
+        return html.Div([
+               dcc.Graph(
+                figure={
+                    "data":[
+                        {'x': df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
+                        {'x': df_model.index, 'y': y_pred_RF, 'type': 'line', 'name': 'Power predicted'},
 
+                        ],
+                   'layout': {
+                       'title': 'Random Forest'
+            }
+        }
+    ),
+           
+             
+             ])
+              
+                       
+    if Regression==2:
+        return html.Div([   
+              dcc.Graph(
+                figure={
+                    "data":[
+                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
+                        {'x': df_model.index, 'y': y_pred_XGB, 'type': 'line', 'name': 'Power predicted'},
+
+                        ],
+                   'layout': {
+                       'title': 'Extreme Gradient boosting'
+            }
+        }
+    ), 
+    
+    ])
+              
+                       
+    if Regression==3:
+        return html.Div([       
+               dcc.Graph(
+                figure={
+                    "data":[
+                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
+                        {'x':df_model.index, 'y': y_pred_BT, 'type': 'line', 'name': 'Power predicted'},
+
+                        ],
+                   'layout': {
+                       'title': 'Bootstrapping'
+            }
+        }
+    ),
+    
+              ])
+              
+                      
+    if Regression==4:
+        return html.Div([   
+               dcc.Graph(
+                figure={
+                    "data":[
+                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
+                        {'x':df_model.index, 'y': y_pred_NN, 'type': 'line', 'name': 'Power predicted'},
+
+                        ],
+                   'layout': {
+                       'title': 'Neural Network'
+            }
+        }
+    ),
+               ])
+               
+    
+
+# Callback for dropdown menù
+@app.callback(Output('per', 'children'),
+              Input('dropd-per', 'value'))
+def render_regp (Performance):
+     
+    
+    if Performance==1:
+        return html.Div([
+            dcc.Graph(   
+            figure={
+            'data': [
+            {'x': ['RF'], 'y': [MAE_RF], 'type': 'bar', 'name': 'Random Forest'},
+            {'x': ['XGB'], 'y': [MAE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['BT'], 'y': [MAE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
+            {'x': ['NN'], 'y': [MAE_NN], 'type': 'bar', 'name': 'Neural Network'},
+           
+                        
+            ],
+            'layout': {
+                'title': 'Mean Abloslute Error', 'color': 'lightblue'
+            }
+        }
+    ),
+    
+])
+    if Performance==2:
+        return html.Div([
+            dcc.Graph(   
+            figure={
+           'data': [
+            {'x': ['RF'], 'y': [MSE_RF], 'type': 'bar', 'name': 'Random Forest'},
+            {'x': ['XGB'], 'y': [MSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['BT'], 'y': [MSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
+            {'x': ['NN'], 'y': [MSE_NN], 'type': 'bar', 'name': 'Neural Network'},
+           
+                        
+            ],
+            'layout': {
+                'title': 'Mean Squared Error', 'color': 'lightblue'
+            }
+        }
+    ),
+    
+])
+      
+    if Performance==3:
+        return html.Div([
+            dcc.Graph(   
+            figure={
+           'data': [
+            {'x': ['RF'], 'y': [RMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
+            {'x': ['XGB'], 'y': [RMSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['BT'], 'y': [RMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
+            {'x': ['NN'], 'y': [RMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
+           
+                        
+            ],
+            'layout': {
+                'title': 'Root Mean squared Error', 'color': 'lightblue'
+            }
+        }
+    ),
+    
+])
+
+    if Performance==4:
+        return html.Div([
+            dcc.Graph(   
+            figure={
+            'data': [
+            {'x': ['RF'], 'y': [cvRMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
+            {'x': ['XGB'], 'y': [cvRMSE_XGB], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
+            {'x': ['BT'], 'y': [cvRMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
+            {'x': ['NN'], 'y': [cvRMSE_NN], 'type': 'bar', 'name': 'Neural Network'},
+           
+                        
+            ],
+            'layout': {
+                'title': 'Variation Coeff. of RMSE', 'color': 'lightblue'
+            }
+        }
+    )
+    
+])
 
 #------------------------------------------------------------------------------------- 
 ## Clustering
@@ -654,7 +987,7 @@ score = [kmeans[i].fit(cluster_data).score(cluster_data) for i in range(len(kmea
 
 ## Dahboard
 
-pag7_layout = html.Div([
+tab7_layout = html.Div([
               html.H3('Clustering',
               style={'color':'white', 'text-align':'center'}),
               html.H6('With 3 clutsers is possible to distinguish 3 profiles,'
@@ -742,28 +1075,27 @@ def render_clust (cluster):
 
 # Callbacks for lateral Menu
    
-@app.callback(
-    Output("page-content", "children"),
-    [Input("url", "pathname")]
-)
-def render_page_content(pathname):
-    if pathname == "/":
-        return pag1_layout
-    elif pathname == "/page-1":
-        return pag2_layout
-    elif pathname == "/page-2":
-        return pag3_layout
-    elif pathname == "/page-3":
-        return pag4_layout
-    elif pathname == "/page-4":
-        return pag5_layout
-    elif pathname == "/page-5":
-        return pag6_layout
-    elif pathname == "/page-6":
-        return pag7_layout
+@app.callback (Output('tabs-content', 'children'),
+              Input('tabs', 'value'))
 
 
 
+def render_content(tab):
+     if tab == 'tab-1':
+        return tab1_layout
+     elif tab == 'tab-2':
+        return tab2_layout
+     elif tab == 'tab-3':
+        return tab3_layout
+     elif tab == 'tab-4':
+        return tab4_layout
+     elif tab == 'tab-5':
+        return tab5_layout
+     elif tab == 'tab-6':
+        return tab6_layout
+     elif tab == 'tab-7':
+        return tab7_layout
+   
 
 
 if __name__ == '__main__':
