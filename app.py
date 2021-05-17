@@ -593,49 +593,7 @@ def render_feat (feature):
 # REGRESSION
 
 ## Pre-processing 
-df_model=ddf.drop(columns=['RH','Holiday', 'Months'])
 
-## Recurrent
-X=df_model.values            
-Y=X[:,0]                                               # Output feature : Power
-X=X[:,[1,2,3,4,5]]                                     # Input features : Temperature, Solar radiation, Hour, Week day, Power-1
-                                  
-X_train, X_test, y_train, y_test = train_test_split(X,Y)
-
-
-# Regression models
-
-# Random forest :
-    # Random forest is a supervised learning algorithm. The "forest" it builds, is an ensemble(combination of learners) of decision trees, usually trained with the “bagging” method (combination of many indipendent models usingaveraging tecnique).
-    # It adds additional randomness to the model, while growing the trees. Instead of searching for the most important feature while splitting a node, it searches for the best feature among a random subset of features (forest)
-    # It solve the limitation of the single decision tree in create step wise function.
-    # The main limitation of random forest is that a large number of trees can make the algorithm too slow and ineffective for real-time predictions
-
-
-parameters = {'bootstrap': False,                                       # Whether bootstrap samples are used when building trees. If False, the whole dataset is used to build each tree. 
-              'n_estimators': 250,                                      # The number of trees in the forest.
-              'min_samples_split': 10,                                  # The minimum number of samples required to split an internal node.
-              'max_features': 'log2',                                   # The number of features to consider when looking for the best split: f 'log2', then max_features=log2(n_features).
-              'max_depth': 20,                                          # The maximum depth of the tree: with 'None', then nodes are expanded  until all leaves contain less than min_samples_split samples.
-              'max_leaf_nodes': None}                                   # The minimum number of samples required to be at a leaf node.
-## Comments:
-    # This set of paramters gives the best performance for Random forest model.                                                                                                                                                                                           
-
-RF_model = RandomForestRegressor(**parameters)                         # Create the Random forest regressor object with speific parameters.
-RF_model.fit(X_train, y_train)                                         # Train the model using the training sets
-y_pred_RF = RF_model.predict(X_test)                                   # Make predictions using the testing set
-
-
-#Evaluate errors
-MAE_RF=metrics.mean_absolute_error(y_test,y_pred_RF)                   # Mean Abloslute Error: is the mean of the absolute value of the errors.
-MSE_RF=metrics.mean_squared_error(y_test,y_pred_RF)                    # Mean Squared Error: is the mean of the squared errors.
-RMSE_RF= np.sqrt(metrics.mean_squared_error(y_test,y_pred_RF))         # Root Mean squared Error: is the quare root of the MSE
-cvRMSE_RF=RMSE_RF/np.mean(y_test)                                      # Coefficient of Variation of the RMSE.
-
-# Results:
-    # There is a very good fitting of the data.
-    # In terms of errors the model shows higher performances respect the previous ones with a cvRMSE decreased to 5,5%
-    
 
 #----------------------------------------------------------------------
 
@@ -657,28 +615,7 @@ cvRMSE_RF=RMSE_RF/np.mean(y_test)                                      # Coeffic
     # It consist on creating multiple datasets from the original one, develop indipendet learners for each dataset and aggregate them in a certain way.
 
 
-parameters = {'bootstrap': bool,                                    # Whether samples are drawn with replacement. If False, sampling without replacement is performed.
-              'base_estimator': None,                               # The base estimator to fit on random subsets of the dataset. If None, then the base estimator is a DecisionTreeRegressor.
-              'n_estimators':100,                                   # The number of base estimators in the ensemble.
-              'warm_start' : True}                                  # Controls the random resampling of the original dataset (sample wise and feature wise).
-
-
-BT_model = BaggingRegressor(**parameters)                           # Create the bagging regressor object with speific parameters.
-BT_model.fit(X_train, y_train)                                      # Train the model using the training sets. 
-y_pred_BT =BT_model.predict(X_test)                                 # Make predictions using the testing sets.
-
-## Evaluation errors
-
-MAE_BT=metrics.mean_absolute_error(y_test,y_pred_BT)                # Mean Abloslute Error: is the mean of the absolute value of the errors.
-MSE_BT=metrics.mean_squared_error(y_test,y_pred_BT)                 # Mean Squared Error: is the mean of the squared errors.
-RMSE_BT= np.sqrt(metrics.mean_squared_error(y_test,y_pred_BT))      # Root Mean squared Error: is the quare root of the MSE
-cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficient of Variation of the RMSE.
-
-
-## Results:
-   # The model works pretty well, the performance results are comparable with the Random Forecast model.
-
-
+p
 #---------------------------------------------------------------------------------------------
 
 #----------------------------------------------
@@ -687,168 +624,12 @@ cvRMSE_BT=RMSE_BT/np.mean(y_test)                                   # Coefficien
 ## Regession models
 
 pag6_layout = html.Div([
-              html.H3('Regression Model',
-              style={'color':'white', 'text-align':'center'}), 
-              html.H6('The best model is the Extreme Gradient boosting ( it is the one with lower errors)'),
-              html.P('Select the Regression model and Errors performance :'),
-              dcc.Dropdown(
-                  id ='dropd-reg',
-                  options=[
-                      {'label': 'Random Forest', 'value':1},
-                      {'label': 'Extreme Gradient boosting', 'value':2},
-                      {'label': 'Bootstrapping ', 'value':3},
-                   
-                      ],
-                  value=1
-                  ),
-              html.Div (id='reg'),
-              dcc.Dropdown(
-                  id ='dropd-per',
-                  options=[
-                      {'label': 'Mean Abloslute Error', 'value':1},
-                      {'label': 'Mean Squared Error', 'value':2},
-                      {'label': 'Root Mean squared Error', 'value':3},
-                      {'label': 'Variation Coeff. of RMSE', 'value':4},
-                      ],
-                  value=1
-                  ),
-              html.Div (id='per')
-])
-
-
-@app.callback(Output('reg', 'children'),
-              Input('dropd-reg', 'value'))
-def render_regr (Regression):
-                      
-                      
-    if Regression==1:
-        return html.Div([
-               dcc.Graph(
-                figure={
-                    "data":[
-                        {'x': df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
-                        {'x': df_model.index, 'y': y_pred_RF, 'type': 'line', 'name': 'Power predicted'},
-
-                        ],
-                   'layout': {
-                       'title': 'Random Forest'
-            }
-        }
-    ),
-           
+              html.H3('Regression Model')
              
-             ])
-              
-                       
-    if Regression==2:
-        return html.Div([html.H2('hey')   
-              
-    ])
-              
-                       
-    if Regression==3:
-        return html.Div([       
-               dcc.Graph(
-                figure={
-                    "data":[
-                        {'x':df_model.index, 'y': y_test, 'type': 'line', 'name': 'Power tested'},
-                        {'x':df_model.index, 'y': y_pred_BT, 'type': 'line', 'name': 'Power predicted'},
-
-                        ],
-                   'layout': {
-                       'title': 'Bootstrapping'
-            }
-        }
-    ),
-    
-              ])
-              
-    
-    
-
-# Callback for dropdown menù
-@app.callback(Output('per', 'children'),
-              Input('dropd-per', 'value'))
-def render_regp (Performance):
-     
-    
-    if Performance==1:
-        return html.Div([
-            dcc.Graph(   
-            figure={
-            'data': [
-            {'x': ['RF'], 'y': [MAE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [0.5], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
-            {'x': ['BT'], 'y': [MAE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-            
-           
-                        
-            ],
-            'layout': {
-                'title': 'Mean Abloslute Error', 'color': 'lightblue'
-            }
-        }
-    ),
-    
-])
-    if Performance==2:
-        return html.Div([
-            dcc.Graph(   
-            figure={
-           'data': [
-            {'x': ['RF'], 'y': [MSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
-            {'x': ['BT'], 'y': [MSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-          
-           
-                        
-            ],
-            'layout': {
-                'title': 'Mean Squared Error', 'color': 'lightblue'
-            }
-        }
-    ),
-    
-])
-      
-    if Performance==3:
-        return html.Div([
-            dcc.Graph(   
-            figure={
-           'data': [
-            {'x': ['RF'], 'y': [RMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
-            {'x': ['BT'], 'y': [RMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-         
-                        
-            ],
-            'layout': {
-                'title': 'Root Mean squared Error', 'color': 'lightblue'
-            }
-        }
-    ),
-    
 ])
 
-    if Performance==4:
-        return html.Div([
-            dcc.Graph(   
-            figure={
-            'data': [
-            {'x': ['RF'], 'y': [cvRMSE_RF], 'type': 'bar', 'name': 'Random Forest'},
-            {'x': ['XGB'], 'y': [0.6], 'type': 'bar', 'name': 'Extreme Gradient Boosting'},
-            {'x': ['BT'], 'y': [cvRMSE_BT], 'type': 'bar', 'name': 'Bootstrappping'},
-          
-           
-                        
-            ],
-            'layout': {
-                'title': 'Variation Coeff. of RMSE', 'color': 'lightblue'
-            }
-        }
-    )
-    
-])
+
+
 
 #------------------------------------------------------------------------------------- 
 ## Clustering
