@@ -13,8 +13,6 @@ itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
 numpy==1.19.1
-olefile==0.46
-openpyxl==3.0.7
 pandas==1.0.0
 plotly==4.10.0
 pybase64==1.1.4
